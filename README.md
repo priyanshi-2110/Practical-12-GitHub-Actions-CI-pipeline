@@ -1,6 +1,6 @@
 # Task Management Application - Full-Stack CI/CD Pipeline
 
-[![CI Pipeline](https://github.com/priyanshi-2110/Practical-11-Docker-Containerization/actions/workflows/ci.yml/badge.svg)](https://github.com/priyanshi-2110/Practical-11-Docker-Containerization/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/priyanshi-2110/Practical-12-GitHub-Actions-CI-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/priyanshi-2110/Practical-12-GitHub-Actions-CI-pipeline/actions/workflows/ci.yml)
 
 ## Practical 12: CI/CD Pipeline with GitHub Actions
 - **Course Outcome:** CO5 / PO3, PO5
