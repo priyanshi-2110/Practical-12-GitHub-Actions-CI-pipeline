@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
-import { getTasks, createTask, updateTask, deleteTask } from "../api";
+import { getTasks, createTask, updateTask, deleteTask, generateTaskDescription } from "../api";
 
 function Projects({ user }) {
   const [tasks, setTasks] = useState([]);
@@ -12,6 +12,8 @@ function Projects({ user }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiBanner, setAiBanner] = useState(null);
 
   // Filter & Search state
   const [filterStatus, setFilterStatus] = useState("all"); // 'all' | 'pending' | 'completed'
@@ -35,6 +37,41 @@ function Projects({ user }) {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  // AI Description Generator (Practical 13)
+  const handleGenerateAIDescription = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a task title first!");
+      return;
+    }
+    try {
+      setGeneratingAI(true);
+      const res = await generateTaskDescription(title.trim());
+      if (res && res.description) {
+        setDescription(res.description);
+        if (res.suggestedPriority) {
+          setPriority(res.suggestedPriority);
+        }
+        if (res.fallback) {
+          toast("Generated using smart fallback (AI service unconfigured/offline)", { icon: "ℹ️" });
+          setAiBanner({
+            message: "Using local AI fallback description. You can edit this freely.",
+            isFallback: true,
+          });
+        } else {
+          toast.success(`AI description generated via ${res.provider}!`);
+          setAiBanner({
+            message: `Generated via ${res.provider}. Edit or adapt as needed.`,
+            isFallback: false,
+          });
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to generate description");
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
 
   // Create Task (POST /api/tasks)
   const handleCreate = async (e) => {
@@ -64,6 +101,7 @@ function Projects({ user }) {
       setTitle("");
       setDescription("");
       setPriority("medium");
+      setAiBanner(null);
     } catch (err) {
       setError(err.message);
       toast.error(err.message || "Failed to create task");
@@ -286,24 +324,78 @@ function Projects({ user }) {
             </div>
 
             <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.825rem",
-                  fontWeight: 600,
-                  color: "var(--text-muted)",
-                  marginBottom: "0.4rem",
-                }}
-              >
-                Description
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.4rem" }}>
+                <label
+                  style={{
+                    fontSize: "0.825rem",
+                    fontWeight: 600,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Description
+                </label>
+                <button
+                  type="button"
+                  id="btn-ai-generate"
+                  onClick={handleGenerateAIDescription}
+                  disabled={generatingAI || !title.trim()}
+                  style={{
+                    background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "0.25rem 0.65rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    cursor: generatingAI || !title.trim() ? "not-allowed" : "pointer",
+                    opacity: generatingAI || !title.trim() ? 0.6 : 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    transition: "all 0.2s ease"
+                  }}
+                  title="Auto-generate description using AI based on Title"
+                >
+                  {generatingAI ? "✨ Generating..." : "✨ Generate description with AI"}
+                </button>
+              </div>
+
+              {aiBanner && (
+                <div
+                  style={{
+                    marginBottom: "0.5rem",
+                    padding: "0.4rem 0.6rem",
+                    borderRadius: "6px",
+                    fontSize: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    backgroundColor: aiBanner.isFallback ? "rgba(234, 179, 8, 0.12)" : "rgba(99, 102, 241, 0.12)",
+                    border: aiBanner.isFallback ? "1px solid rgba(234, 179, 8, 0.3)" : "1px solid rgba(99, 102, 241, 0.3)",
+                    color: aiBanner.isFallback ? "#ca8a04" : "#818cf8"
+                  }}
+                >
+                  <span>{aiBanner.isFallback ? "⚡ Fallback Mode: " : "✨ AI Assistant: "}{aiBanner.message}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAiBanner(null)}
+                    style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", fontSize: "0.8rem", padding: "0 0.2rem" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               <textarea
-                placeholder="Optional details, notes, or subtasks..."
+                placeholder="Optional details, notes, or subtasks... (or click 'Generate description with AI')"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 style={{ resize: "vertical" }}
               />
+              <span style={{ fontSize: "0.72rem", color: "var(--text-dim)", marginTop: "0.25rem", display: "block" }}>
+                Editable suggestion: You can accept or modify the AI-generated text freely.
+              </span>
             </div>
 
             <div>

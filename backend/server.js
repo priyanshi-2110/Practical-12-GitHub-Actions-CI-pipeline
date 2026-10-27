@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 require("./utils/listeners"); // Load event listeners
 
 const app = express();
@@ -54,6 +55,9 @@ app.use("/auth", authRoutes);
 
 app.use("/api/tasks", taskRoutes);
 app.use("/tasks", taskRoutes);
+
+app.use("/api/ai", aiRoutes);
+app.use("/ai", aiRoutes);
 
 // ========================================
 // 404 Handler
